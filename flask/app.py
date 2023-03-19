@@ -25,8 +25,8 @@ Session(app)
 def index():
     
     session.update({
-       'teamWin' : [],
-       'teamLose' : []
+       'teamWin' : {},
+       'teamLose' : {}
     })
     return render_template('main.html')
 
@@ -41,21 +41,21 @@ def add_to_list():
     if (formitem['playerName'] == '1'):
         session.clear()
         session.update({
-            'teamWin' : [],
-            'teamLose' : []
+            'teamWin' : {},
+            'teamLose' : {}
         })
     
     else:
         s=dict(session.items())
         team = formitem['team']
         playerName = formitem['playerName']
-        s[team].append({playerName : {'mu' : '', 'sigma' : ''}})
+        s[team][playerName] = {'mu' : '', 'sigma' : ''}
         
         
-        s[team][-1][playerName]['mu'] = formitem['mu']
-        s[team][-1][playerName]['sigma'] = formitem['sigma']
+        s[team][playerName]['mu'] = formitem['mu']
+        s[team][playerName]['sigma'] = formitem['sigma']
 
-        print(s)
+        
 
    return render_template('main.html')
 
@@ -66,17 +66,16 @@ def manage():
 @app.route('/calculate', methods = ['POST'])
 def calculate():
     s = dict(session.items())
-    
+    print(s)
     win_ratings = []
     lose_ratings = []
-    for member in s['teamWin']:
-        member = dict(member)
-        key = list(member.keys())[0]
-        win_ratings.append(Rating(mu=float(member[key]['mu']), sigma=float(member[key]['sigma'])))
+    for member in s['teamWin']: #TODO this is bad, fix
+        print(member) #this only gives the key
+        win_ratings.append(Rating(mu=float(member['mu']), sigma=float(member['sigma'])))
     for member in s['teamLose']:
-        member = dict(member)
-        key = list(member.keys())[0]
-        lose_ratings.append(Rating(mu=float(member[key]['mu']), sigma=float(member[key]['sigma'])))
+        
+        
+        lose_ratings.append(Rating(mu=float(member['mu']), sigma=float(member['sigma'])))
 
     print(win_ratings, lose_ratings)
     rated = rate([tuple(win_ratings), tuple(lose_ratings)])
@@ -84,9 +83,9 @@ def calculate():
 
     i = 0
     for member in s['teamWin']:
-        key = list(member.keys())[0]
-        member[key]['mu'] = rated[0][i].mu
-        member[key]['sigma'] = rated[0][i].sigma
+        
+        member['mu'] = rated[0][i].mu
+        member['sigma'] = rated[0][i].sigma
         i+=1
     i = 0
     for member in s['teamLose']:
@@ -100,17 +99,12 @@ def calculate():
 @app.route('/remove', methods = ['POST'])
 def remove():
     s = dict(session.items())
-    form = dict(request.form)['playerName'].split('\'')[1] #unholy, find a better solution
+    print(request.form)
+    #form = dict(request.form)['playerName'].split('\'')[1] #unholy, find a better solution
     
-    for member in s['teamWin']: #also unholy and not even good.
-        
-        member.pop(form, '')
-        #s['teamWin'] = filter(lambda x : x == '{}', s['teamWin'])
-        
+    s['teamWin'].pop(request.form['playerName'], '') 
+    s['teamLose'].pop(request.form['playerName'], '')
     
-    for member in s['teamLose']:
-        
-        member.pop(form, '')
    
     print(s)
     return render_template('main.html')

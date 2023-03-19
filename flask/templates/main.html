@@ -35,8 +35,8 @@
     <p>Winning team:</p>
     <li>
         {% for element in session['teamWin'] -%}
-            <ul> {{ element }} 
-                <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ element.keys() }}> <input type="submit" value="Remove"></form>
+            <ul> <span>{{ element }}</span> 
+                <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ element }}> <input type="submit" value="Remove"></form>
                 <form action="/swap" method="post" name= {{ element }} ><button>Swap</button></form> 
             </ul>
         {% endfor %}
