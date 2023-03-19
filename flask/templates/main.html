@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <h1>Trueskill ui demo thing</h1>
+    <form action="/manage">
+        <button>Manage</button>
+    </form>
+    <form action="/settings">
+        <button>Settings</button>
+    </form>
+    
+    
+    <form action="/add_to_list" method="POST">
+        <input type="hidden" name="team" value="teamWin">
+        <input type="text" name="playerName">
+        <input type="number" value="25" name="mu">
+        <input type="number" value="8.33" name="sigma">
+        <input type="submit" value="Submit">
+    </form>
+    
+    <form action="/add_to_list" method="POST">
+        <input type="hidden" name="team" value="teamLose">
+        <input type="text" name="playerName" alt="name">
+        <input type="number" value="25" name="mu">
+        <input type="number" value="8.33" name="sigma">
+        <input type="submit" value="Submit">
+    </form>
+    <p>Winning team:</p>
+    <li>
+        {% for element in session['teamWin'] -%}
+            <ul> {{ element }}</ul>
+        {% endfor %}
+        
+    </li>
+    <p>Losing team:</p>
+    <li>
+        {% for element in session['teamLose'] -%}
+            <ul> {{ element }}</ul>
+        {% endfor %}
+        
+    </li>
+    
+    <form action="/calculate" method="POST">
+        <button>Update ratings</button>
+    </form>
+
+</body>
+</html>
+
