@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, session, json
 from flask_session import Session
+import base64
 
+from matplotlib.figure import Figure
+from io import BytesIO
 # import requi9red module
 import sys
  
@@ -28,6 +31,16 @@ def index():
        'teamWin' : {},
        'teamLose' : {}
     })
+
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot([1, 2])
+    # Save it to a temporary buffer.
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    # Embed the result in the html output.
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    
     return render_template('main.html')
 
 
@@ -38,22 +51,16 @@ def add_to_list():
     print('got from form: ', formitem)
     
     
-    if (formitem['playerName'] == '1'):
-        session.clear()
-        session.update({
-            'teamWin' : {},
-            'teamLose' : {}
-        })
     
-    else:
-        s=dict(session.items())
-        team = formitem['team']
-        playerName = formitem['playerName']
-        s[team][playerName] = {'mu' : '', 'sigma' : ''}
-        
-        
-        s[team][playerName]['mu'] = formitem['mu']
-        s[team][playerName]['sigma'] = formitem['sigma']
+
+    s=dict(session.items())
+    team = formitem['team']
+    playerName = formitem['playerName']
+    s[team][playerName] = {'mu' : '', 'sigma' : ''}
+    
+    
+    s[team][playerName]['mu'] = formitem['mu']
+    s[team][playerName]['sigma'] = formitem['sigma']
 
         
 
@@ -66,32 +73,35 @@ def manage():
 @app.route('/calculate', methods = ['POST'])
 def calculate():
     s = dict(session.items())
-    print(s)
+    print('CALCULATING: ' , s)
     win_ratings = []
     lose_ratings = []
-    for member in s['teamWin']: #TODO this is bad, fix
-        print(member) #this only gives the key
-        win_ratings.append(Rating(mu=float(member['mu']), sigma=float(member['sigma'])))
-    for member in s['teamLose']:
+    
+    
+    for keys, values in s['teamWin'].items(): 
         
-        
-        lose_ratings.append(Rating(mu=float(member['mu']), sigma=float(member['sigma'])))
+        win_ratings.append(Rating(mu=float(values['mu']), sigma=float(values['sigma'])))
+
+    for keys, values in s['teamLose'].items():
+         
+        lose_ratings.append(Rating(mu=float(values['mu']), sigma=float(values['sigma'])))
 
     print(win_ratings, lose_ratings)
     rated = rate([tuple(win_ratings), tuple(lose_ratings)])
     print(rated)
 
     i = 0
-    for member in s['teamWin']:
-        
-        member['mu'] = rated[0][i].mu
-        member['sigma'] = rated[0][i].sigma
+    for keys, values in s['teamWin'].items():
+         
+        values['mu'] = rated[0][i].mu
+        values['sigma'] = rated[0][i].sigma
         i+=1
     i = 0
-    for member in s['teamLose']:
-        key = list(member.keys())[0]
-        member[key]['mu'] = rated[1][i].mu
-        member[key]['sigma'] = rated[1][i].sigma
+    for keys, values in s['teamLose'].items():
+        
+        
+        values['mu'] = rated[1][i].mu
+        values['sigma'] = rated[1][i].sigma
         i+=1
 
     return render_template('main.html')
@@ -99,7 +109,7 @@ def calculate():
 @app.route('/remove', methods = ['POST'])
 def remove():
     s = dict(session.items())
-    print(request.form)
+    
     #form = dict(request.form)['playerName'].split('\'')[1] #unholy, find a better solution
     
     s['teamWin'].pop(request.form['playerName'], '') 
@@ -112,13 +122,19 @@ def remove():
 if __name__ == '__main__':
     app.run()
 
+@app.route('/swap', methods = ['POST'])
+def swap():
+    s = dict(session.items())
+    print(request.form['playerName'])
+    
+    return render_template('main.html')
 
 """
 new data structure todo
 session:
 {
     "teams" : {
-        "teamWin" : {
+        "team1" : {
             "playerName" : 
                 {
                 "sigma" : "",
@@ -128,9 +144,10 @@ session:
                 etc.
             },
 
-        }
+        },
 
-        "teamLose" : []
+        "team2" : {},
+        etc.
     }
 
 }

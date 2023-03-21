@@ -34,18 +34,21 @@
     </form>
     <p>Winning team:</p>
     <li>
-        {% for element in session['teamWin'] -%}
-            <ul> <span>{{ element }}</span> 
-                <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ element }}> <input type="submit" value="Remove"></form>
-                <form action="/swap" method="post" name= {{ element }} ><button>Swap</button></form> 
+        {% for key, values in session['teamWin'].items() -%}
+            <ul> <span>{{ key}} {{values}}</span> 
+                <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Remove"></form>
+                <form action="/swap" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Swap"></form>
             </ul>
         {% endfor %}
         
     </li>
     <p>Losing team:</p>
     <li>
-        {% for element in session['teamLose'] -%}
-            <ul> {{ element }}</ul>
+        {% for key,values in session['teamLose'].items() -%}
+        <ul> <span>{{ key }} {{ values}}</span> 
+            <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Remove"></form>
+            <form action="/swap" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Swap"></form>
+        </ul>
         {% endfor %}
         
     </li>
@@ -53,6 +56,9 @@
     <form action="/calculate" method="POST">
         <button>Update ratings</button>
     </form>
+    <img src='data:image/png;base64,{{ data }}'/>
+
+    
 
 </body>
 </html>
