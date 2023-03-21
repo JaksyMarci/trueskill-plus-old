@@ -28,10 +28,11 @@ Session(app)
 def index():
     
     session.update({
-       'teamWin' : {},
-       'teamLose' : {}
+       'team1' : {},
+       'team2' : {},
+       'team3' : {}
     })
-
+    """
     fig = Figure()
     ax = fig.subplots()
     ax.plot([1, 2])
@@ -40,31 +41,32 @@ def index():
     fig.savefig(buf, format="png")
     # Embed the result in the html output.
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    
+    """
+
     return render_template('main.html')
 
 
 @app.route('/add_to_list', methods = ['POST', 'GET'])
 def add_to_list():
-   if request.method == 'POST':
-    formitem = request.form
-    print('got from form: ', formitem)
-    
-    
-    
+    if request.method == 'POST':
+        formitem = request.form
+        print('got from form: ', formitem)
 
-    s=dict(session.items())
-    team = formitem['team']
-    playerName = formitem['playerName']
-    s[team][playerName] = {'mu' : '', 'sigma' : ''}
-    
-    
-    s[team][playerName]['mu'] = formitem['mu']
-    s[team][playerName]['sigma'] = formitem['sigma']
 
-        
 
-   return render_template('main.html')
+
+        s=dict(session.items())
+        team = formitem['team']
+        playerName = formitem['playerName']
+        s[team][playerName] = {'mu' : '', 'sigma' : ''}
+
+
+        s[team][playerName]['mu'] = formitem['mu']
+        s[team][playerName]['sigma'] = formitem['sigma']
+
+
+
+        return render_template('main.html')
 
 @app.route('/manage', methods = [])
 def manage():
@@ -74,36 +76,36 @@ def manage():
 def calculate():
     s = dict(session.items())
     print('CALCULATING: ' , s)
-    win_ratings = []
-    lose_ratings = []
-    
-    
-    for keys, values in s['teamWin'].items(): 
+   
+    ratings = []
+    for teamName, teamMembers in s.items(): 
+        playerRating = []
         
-        win_ratings.append(Rating(mu=float(values['mu']), sigma=float(values['sigma'])))
+        for member, rating in teamMembers.items():
+            
+            playerRating.append(Rating(mu=float(rating['mu']), sigma=float(rating['sigma'])))
+        
 
-    for keys, values in s['teamLose'].items():
-         
-        lose_ratings.append(Rating(mu=float(values['mu']), sigma=float(values['sigma'])))
+        ratings.append(playerRating)
 
-    print(win_ratings, lose_ratings)
-    rated = rate([tuple(win_ratings), tuple(lose_ratings)])
+    
+
+    print(ratings)
+    rated = rate(ratings)
     print(rated)
+    rated_flat = [item for sublist in rated for item in sublist]
+
+    #dict items are ordered since python 3.6!
 
     i = 0
-    for keys, values in s['teamWin'].items():
-         
-        values['mu'] = rated[0][i].mu
-        values['sigma'] = rated[0][i].sigma
-        i+=1
-    i = 0
-    for keys, values in s['teamLose'].items():
-        
-        
-        values['mu'] = rated[1][i].mu
-        values['sigma'] = rated[1][i].sigma
-        i+=1
+    for teams, teamMembers in s.items():
+        for member, rating in teamMembers.items():
 
+            rating['mu'] = rated_flat[i].mu
+            rating['sigma'] = rated_flat[i].sigma
+            i+=1
+       
+    
     return render_template('main.html')
 
 @app.route('/remove', methods = ['POST'])
@@ -112,8 +114,9 @@ def remove():
     
     #form = dict(request.form)['playerName'].split('\'')[1] #unholy, find a better solution
     
-    s['teamWin'].pop(request.form['playerName'], '') 
-    s['teamLose'].pop(request.form['playerName'], '')
+    for teams, teamMembers in s.items():
+        teamMembers.pop(request.form['playerName'], '') 
+    
     
    
     print(s)
@@ -122,12 +125,7 @@ def remove():
 if __name__ == '__main__':
     app.run()
 
-@app.route('/swap', methods = ['POST'])
-def swap():
-    s = dict(session.items())
-    print(request.form['playerName'])
-    
-    return render_template('main.html')
+
 
 """
 new data structure todo
