@@ -90,9 +90,9 @@ def calculate():
 
     
 
-    print(ratings)
+    
     rated = rate(ratings)
-    print(rated)
+    
     rated_flat = [item for sublist in rated for item in sublist]
 
     #dict items are ordered since python 3.6!
@@ -119,7 +119,7 @@ def remove():
     
     
    
-    print(s)
+    
     return render_template('main.html')
 
 if __name__ == '__main__':
