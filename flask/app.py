@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 
 """
-new data structure todo
+new data structure:
 session:
 {
     "teams" : {
