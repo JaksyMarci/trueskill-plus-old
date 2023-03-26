@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, session, json
 from flask_session import Session
-import base64
 
-from matplotlib.figure import Figure
+import base64
 from io import BytesIO
+from matplotlib.figure import Figure
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+
+
 # import requi9red module
 import sys
 
@@ -35,18 +40,11 @@ def index():
         }
         
     })
-    print(session)
-    """
-    fig = Figure()
-    ax = fig.subplots()
-    ax.plot([1, 2])
-    # Save it to a temporary buffer.
-    buf = BytesIO()
-    fig.savefig(buf, format="png")
-    # Embed the result in the html output.
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    """
-
+    session.pop('img','')
+    
+    
+    
+    #print(session['teams'])
     return render_template('main.html')
 
 
@@ -72,7 +70,11 @@ def add_to_list():
 
         return render_template('main.html')
 
-@app.route('/manage', methods = [])
+@app.route('/main', methods = ['GET'])
+def main():
+    return render_template('main.html')
+
+@app.route('/manage', methods = ['GET'])
 def manage():
     return render_template('manage.html')
 
@@ -109,6 +111,26 @@ def calculate():
             rating['sigma'] = rated_flat[i].sigma
             i+=1
        
+    plt.clf()
+    session.pop('img','')
+    x_axis = np.arange(0,50,0.01)
+    for teanName, teamMember in s.items():
+        for teamMember, values in teamMember.items():
+            #invent some clever colors here
+            plt.plot(x_axis, norm.pdf(x_axis, values['mu'], values['sigma']))
+    
+    
+    
+   
+    
+
+    # Save it to a temporary buffer.
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    # Embed the result in the html output.
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    session['img'] = data
+
     
     return render_template('main.html')
 
