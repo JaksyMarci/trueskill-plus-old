@@ -110,7 +110,9 @@ def calculate():
             rating['mu'] = rated_flat[i].mu
             rating['sigma'] = rated_flat[i].sigma
             i+=1
-       
+    
+
+    #make figure
     plt.clf()
     session.pop('img','')
     x_axis = np.arange(0,50,0.01)
@@ -126,7 +128,7 @@ def calculate():
 
     # Save it to a temporary buffer.
     buf = BytesIO()
-    plt.savefig(buf, format="png")
+    plt.savefig(buf, format="png", )
     # Embed the result in the html output.
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
     session['img'] = data
