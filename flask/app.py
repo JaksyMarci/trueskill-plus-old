@@ -6,9 +6,10 @@ from matplotlib.figure import Figure
 from io import BytesIO
 # import requi9red module
 import sys
- 
+
 # append the path of the
 # parent directory
+import logging;
 sys.path.append("..")
  
 # import method from sibling
@@ -28,10 +29,13 @@ Session(app)
 def index():
     
     session.update({
-       'team1' : {},
-       'team2' : {},
-       'team3' : {}
+        'teams' : {
+            'team1' : {},
+            'team2' : {}
+        }
+        
     })
+    print(session)
     """
     fig = Figure()
     ax = fig.subplots()
@@ -46,7 +50,7 @@ def index():
     return render_template('main.html')
 
 
-@app.route('/add_to_list', methods = ['POST', 'GET'])
+@app.route('/add_player', methods = ['POST', 'GET'])
 def add_to_list():
     if request.method == 'POST':
         formitem = request.form
@@ -55,7 +59,7 @@ def add_to_list():
 
 
 
-        s=dict(session.items())
+        s=dict(session['teams'].items())
         team = formitem['team']
         playerName = formitem['playerName']
         s[team][playerName] = {'mu' : '', 'sigma' : ''}
@@ -74,7 +78,7 @@ def manage():
 
 @app.route('/calculate', methods = ['POST'])
 def calculate():
-    s = dict(session.items())
+    s = dict(session['teams'].items())
     print('CALCULATING: ' , s)
    
     ratings = []
@@ -93,7 +97,7 @@ def calculate():
     
     rated = rate(ratings)
     
-    rated_flat = [item for sublist in rated for item in sublist]
+    rated_flat = [item for sublist in rated for item in sublist] #flatten
 
     #dict items are ordered since python 3.6!
 
@@ -108,10 +112,11 @@ def calculate():
     
     return render_template('main.html')
 
-@app.route('/remove', methods = ['POST'])
+@app.route('/remove_player', methods = ['POST'])
 def remove():
-    s = dict(session.items())
+    s = dict(session['teams'])
     
+    print(s)
     #form = dict(request.form)['playerName'].split('\'')[1] #unholy, find a better solution
     
     for teams, teamMembers in s.items():
@@ -121,6 +126,28 @@ def remove():
    
     
     return render_template('main.html')
+
+@app.route('/remove_team', methods = ['POST'])
+def remove_team():
+    
+    session['teams'].pop(request.form['team'])
+   
+    print(session)
+    
+
+
+    return render_template('main.html')
+
+
+@app.route('/add_team', methods = ['POST'])
+def add_team():
+    
+
+    session['teams'][request.form['teamName']] = {}
+
+
+    return render_template('main.html')
+
 
 if __name__ == '__main__':
     app.run()

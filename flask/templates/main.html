@@ -16,9 +16,9 @@
         <button>Settings</button>
     </form>
     
-    {% for teamName, teamMembers in session.items() -%}
+    {% for teamName, teamMembers in session['teams'].items() -%}
         <h2>{{teamName}}</h2>
-            <form action="/add_to_list" method="POST">
+            <form action="/add_player" method="POST">
                 <input type="hidden" name="team" value="{{ teamName }}">
                 <input type="text" name="playerName">
                 <input type="number" value="25" name="mu">
@@ -27,18 +27,26 @@
             </form>
 
             <li>
-                {% for key, values in session[teamName].items() -%}
+                {% for key, values in session['teams'][teamName].items() -%}
                     <ul> <span>{{ key}} {{values}}</span> 
-                        <form action="/remove" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Remove"></form>
+                        <form action="/remove_player" method="post"  ><input type="hidden" name="playerName" value={{ key }}> <input type="submit" value="Remove"></form>
                     </ul>
                 {% endfor %}
                 
             </li>
+            <form action="/remove_team" method="POST">
+                <input type="hidden" name="team" value="{{ teamName }}">
+                <input type="submit" value="Remove_team">
+            </form>
     {%endfor%}
     
     
     <form action="/calculate" method="POST">
         <button>Update ratings</button>
+    </form>
+    <form action="/add_team" method="POST">
+        <input type="text" name="teamName">
+        <button>Add team</button>
     </form>
     <img src='data:image/png;base64,{{ data }}'/>
 
