@@ -100,7 +100,7 @@ class PriorFactor(Factor):
         
 
     def down(self):
-        print('called Down on priorfactor')
+        
         sigma = math.sqrt(self.val.sigma ** 2 + self.dynamic ** 2)
         #TODO: add exp offset here. Need values for it.
         # value = Gaussian(self.val.mu + experienceOffser(), sigma)
@@ -120,6 +120,7 @@ class LikelihoodFactor(Factor):
         return 1. / (1. + self.variance * var.pi)
 
     def down(self):
+        print('called Down on likelihoodfactor')
         # update value.
         msg = self.mean / self.mean[self]
         a = self.calc_a(msg)
@@ -127,6 +128,7 @@ class LikelihoodFactor(Factor):
 
     def up(self):
         # update mean.
+        print('called Up on likelihoodfactor')
         msg = self.value / self.value[self]
         a = self.calc_a(msg)
         return self.mean.update_message(self, a * msg.pi, a * msg.tau)

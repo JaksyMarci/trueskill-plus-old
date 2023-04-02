@@ -408,6 +408,7 @@ class TrueSkill(object):
                                               build_trunc_layer])
         team_diff_len = len(team_diff_layer)
         for x in range(10):
+            print(f'ITERATE {x} BEGIN')
             if team_diff_len == 1:
                 # only two teams
                 team_diff_layer[0].down()
