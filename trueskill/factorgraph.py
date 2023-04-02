@@ -97,9 +97,13 @@ class PriorFactor(Factor):
         super(PriorFactor, self).__init__([var])
         self.val = val
         self.dynamic = dynamic
+        
 
     def down(self):
+        print('called Down on priorfactor')
         sigma = math.sqrt(self.val.sigma ** 2 + self.dynamic ** 2)
+        #TODO: add exp offset here. Need values for it.
+        # value = Gaussian(self.val.mu + experienceOffser(), sigma)
         value = Gaussian(self.val.mu, sigma)
         return self.var.update_value(self, value=value)
 

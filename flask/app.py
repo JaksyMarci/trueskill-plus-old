@@ -74,7 +74,7 @@ def add_to_list():
 
 @app.route('/manage', methods=['GET','POST'])
 def manage():
-    logging.info(request.form)
+    #logging.info(request.form)
     return render_template('manage.html')
 
 

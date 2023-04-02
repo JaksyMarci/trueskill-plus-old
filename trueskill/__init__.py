@@ -325,6 +325,8 @@ class TrueSkill(object):
         """
         flatten_ratings = sum(map(tuple, rating_groups), ())
         flatten_weights = sum(map(tuple, weights), ())
+        print('flatten_ratings: ', flatten_ratings)
+
         size = len(flatten_ratings)
         group_size = len(rating_groups)
         # create variables
@@ -336,9 +338,13 @@ class TrueSkill(object):
         # layer builders
         def build_rating_layer():
             for rating_var, rating in zip(rating_vars, flatten_ratings):
+                #TODO: add experience effects here
+                print('rating var and rating: ',rating_var, rating)
                 yield PriorFactor(rating_var, rating, self.tau)
         def build_perf_layer():
             for rating_var, perf_var in zip(rating_vars, perf_vars):
+                #TODO: add squad effects here
+                print('rating_var and perf_vars: ', rating_var, perf_var)
                 yield LikelihoodFactor(rating_var, perf_var, self.beta ** 2)
         def build_team_perf_layer():
             for team, team_perf_var in enumerate(team_perf_vars):
