@@ -40,7 +40,7 @@ Session(app)
 @app.route('/main')
 def index():
 
-    print("MI A FASZ")
+    
     session.update({
         'teams': {
             'team1': {},
