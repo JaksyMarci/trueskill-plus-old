@@ -1,34 +1,41 @@
+import itertools
 import pandas as pd
 import math
 import sys
 from matplotlib import pyplot as plt
 import numpy as np
 sys.path.append("..")
+
 from trueskill import Rating, rate_1vs1, TrueSkill
-
-import itertools
-
-
-
 
 ratings = {}
 mu_values = {}
-#pro csgo games from 2016-2020
-#source: https://www.kaggle.com/datasets/gabrieltardochi/counter-strike-global-offensive-matches?resource=download
+# pro csgo games from 2016-2020
+# source: https://www.kaggle.com/datasets/gabrieltardochi/counter-strike-global-offensive-matches?resource=download
 
 df = pd.read_csv('csgo_games.csv')[['team_1', 'team_2', 'winner',
-                                   't1_player1_kdr', 't1_player2_kdr', 't1_player3_kdr', 't1_player4_kdr', 't1_player5_kdr', 
-                                   't2_player1_kdr', 't2_player2_kdr', 't2_player3_kdr', 't2_player4_kdr', 't2_player5_kdr' ]]
+                                   't1_player1_kdr', 't1_player2_kdr', 't1_player3_kdr', 't1_player4_kdr', 't1_player5_kdr',
+                                    't2_player1_kdr', 't2_player2_kdr', 't2_player3_kdr', 't2_player4_kdr', 't2_player5_kdr',
+                                    't1_player1_dmr', 't1_player2_dmr', 't1_player3_dmr', 't1_player4_dmr', 't1_player5_dmr',
+                                    't2_player1_dmr', 't2_player2_dmr', 't2_player3_dmr', 't2_player4_dmr', 't2_player5_dmr']]
+
+
+df['t1_avg_kdr'] = (df['t1_player1_kdr'] + df['t1_player2_kdr'] +
+                    df['t1_player3_kdr'] + df['t1_player4_kdr'] + df['t1_player5_kdr']) / 5
+df['t2_avg_kdr'] = (df['t2_player1_kdr'] + df['t2_player2_kdr'] +
+                    df['t2_player3_kdr'] + df['t2_player4_kdr'] + df['t2_player5_kdr']) / 5
+
+df['t1_avg_dmr'] = (df['t1_player1_dmr'] + df['t1_player2_dmr'] +
+                    df['t1_player3_dmr'] + df['t1_player4_dmr'] + df['t1_player5_dmr']) / 5
+df['t2_avg_dmr'] = (df['t2_player1_dmr'] + df['t2_player2_dmr'] +
+                    df['t2_player3_dmr'] + df['t2_player4_dmr'] + df['t2_player5_dmr']) / 5
 
 
 
-df['t1_avg_kdr'] = (df['t1_player1_kdr'] + df['t1_player2_kdr'] + df['t1_player3_kdr'] + df['t1_player4_kdr'] +  df['t1_player5_kdr']) / 5
-df['t2_avg_kdr'] = (df['t2_player1_kdr'] + df['t2_player2_kdr'] + df['t2_player3_kdr'] + df['t2_player4_kdr'] +  df['t2_player5_kdr']) / 5
-
-df = df[['team_1', 'team_2', 'winner', 't1_avg_kdr', 't2_avg_kdr']]
+df = df[['team_1', 'team_2', 'winner', 't1_avg_kdr', 't2_avg_kdr', 't1_avg_dmr', 't2_avg_dmr']]
 
 
-#remove teams from the dataset that have less than 200 matches
+# remove teams from the dataset that have less than 200 matches
 
 value_counts_1 = df['team_1'].value_counts()
 value_counts_2 = df['team_2'].value_counts()
@@ -41,14 +48,15 @@ df = df[df['team_1'].isin(keep_values_1)]
 df = df[df['team_2'].isin(keep_values_2)]
 
 
-#prepare plot
+# prepare plot
 plt.figure(figsize=[20, 5], dpi=400)
 x = []
 y = []
 
-#prepare TS1 env
+# prepare TS1 env
 env = TrueSkill(draw_probability=0)
 env.make_as_global()
+
 
 def win_probability(team1, team2):
     team1 = [team1]
@@ -57,17 +65,17 @@ def win_probability(team1, team2):
     sum_sigma = sum(r.sigma ** 2 for r in itertools.chain(team1, team2))
     size = len(team1) + len(team2)
     denom = math.sqrt(size * (env.beta * env.beta) + sum_sigma)
-    
+
     return env.cdf(delta_mu / denom)
 
 
-#assign initial ratings (could be more efficient but oh well)
+
+# assign initial ratings (could be more efficient but oh well)
 for index, row in df.iterrows():
     x.append(index)
     if row['team_1'] not in ratings:
-        r = ratings[row['team_1']] = Rating() 
-        
-        
+        r = ratings[row['team_1']] = Rating()
+
     if row['team_2'] not in ratings:
         r = ratings[row['team_2']] = Rating()
 
@@ -82,26 +90,26 @@ for index, row in df.iterrows():
     probabilities.append(p)
 
     if (row['winner'] == 't1'):
-        
-        t1_new_rating, t2_new_rating = rate_1vs1(ratings[row['team_1']], ratings[row['team_2']])
-        
+
+        t1_new_rating, t2_new_rating = rate_1vs1(
+            ratings[row['team_1']], ratings[row['team_2']])
+
         ratings[row['team_1']] = t1_new_rating
         ratings[row['team_2']] = t2_new_rating
 
     elif (row['winner'] == 't2'):
-        
-        t2_new_rating, t1_new_rating = rate_1vs1(ratings[row['team_2']], ratings[row['team_1']])
+
+        t2_new_rating, t1_new_rating = rate_1vs1(
+            ratings[row['team_2']], ratings[row['team_1']])
 
         ratings[row['team_1']] = t1_new_rating
         ratings[row['team_2']] = t2_new_rating
 
-    mu_list= []
-    
+    mu_list = []
+
     for key, value in ratings.items():
         mu_list.append(value.mu)
-        
-    
-  
+
     y.append(mu_list)
 
 df['predicted_winner'] = predictions
@@ -118,14 +126,68 @@ plt.savefig('image')
 num_matches = sum(df['winner'] == df['predicted_winner'])
 total_rows = len(df)
 percent_matches = num_matches / total_rows * 100
+# initial value: 56.726 %
+print(
+    f'Trueskill correctly predicts the outcome {percent_matches}% of the time.')
 
-print(f'Trueskill correctly predicts the outcome {percent_matches}% of the time.')
-
+# removing the first 1000 elements to get a better average
 df = df.tail(-1000)
 
 num_matches = sum(df['winner'] == df['predicted_winner'])
 total_rows = len(df)
 percent_matches = num_matches / total_rows * 100
+# initial value: 58,546%
+print(
+    f'After removing the first 1000 rows and ratings converge, Trueskill correctly predicts the outcome {percent_matches}% of the time.')
+"""
+#TODO: finish this shitty chatgpt code
 
-print(f'After removing the first 1000 rows and ratings converge, Trueskill correctly predicts the outcome {percent_matches}% of the time.')
+import tensorflow as tf
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
+# Load the data into a Pandas dataframe
+data = {'winner': ['team1', 'team2', 'team1', 'team1', 'team2', 'team1', 'team2', 'team2', 'team1', 'team1'],
+        'win probability': [0.8, 0.6, 0.9, 0.7, 0.5, 0.6, 0.4, 0.3, 0.2, 0.7],
+        'avg_kda': [3.2, 2.7, 4.1, 3.8, 2.5, 3.3, 2.9, 2.7, 3.1, 3.6]}
+df = pd.DataFrame(data)
+
+# Convert the 'winner' column to a one-hot encoded format
+df = pd.get_dummies(df, columns=['winner'])
+
+# Split the data into input and output columns
+X = df.drop('avg_kda', axis=1).values
+y = df['avg_kda'].values
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Create a multilayer perceptron model with ReLU activation
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(3,)),
+    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dense(1)
+])
+
+# Compile the model with a mean squared error loss and Adam optimizer
+model.compile(loss='mse', optimizer='adam')
+
+# Fit the model on the training data
+model.fit(X_train, y_train, epochs=100, batch_size=1)
+
+# Evaluate the model on the testing data
+test_loss = model.evaluate(X_test, y_test)
+print('Test loss:', test_loss)
+
+# Predict the 'avg_kda' values for new data
+new_data = {'winner': ['team1', 'team2'],
+            'win probability': [0.6, 0.8]}
+new_df = pd.DataFrame(new_data)
+new_df = pd.get_dummies(new_df, columns=['winner'])
+new_X = new_df.values
+predictions = model.predict(new_X)
+
+# Print the predicted 'avg_kda' values
+print(predictions)
+
+"""
