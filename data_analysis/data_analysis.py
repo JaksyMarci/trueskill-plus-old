@@ -73,7 +73,7 @@ def win_probability(team1, team2):
 
     return env.cdf(delta_mu / denom)
 
-is_bo3 = []
+is_bestof = []
 kdr_diff = []
 # assign initial ratings 
 #very inefficient but i dont want to fix it
@@ -85,13 +85,13 @@ for index, row in df.iterrows():
     if row['team_2'] not in ratings:
         r = ratings[row['team_2']] = Rating()
 
-    if row['t1_points'] + row['t2_points'] <= 3 :
-        is_bo3.append(True)
+    if row['t1_points'] + row['t2_points'] <= 5 :
+        is_bestof.append(True)
     else:
-        is_bo3.append(False)
+        is_bestof.append(False)
     
     kdr_diff.append(row['t1_avg_kdr'] - row['t2_avg_kdr'])
-df['is_bo3'] = is_bo3
+df['is_bo3'] = is_bestof
 df['kdr_diff'] = kdr_diff
 
 df['predicted_winner'] = 0
@@ -160,6 +160,7 @@ print(
 import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
+
 """
 # Load the data into a Pandas dataframe
 data = {'winner': ['team1', 'team2', 'team1', 'team1', 'team2', 'team1', 'team2', 'team2', 'team1', 'team1'],
@@ -187,7 +188,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # Create a multilayer perceptron model with ReLU activation
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(16, activation='relu', input_shape=(7,)),
+    tf.keras.layers.Dense(32, activation='relu', input_shape=(7,)),
+    tf.keras.layers.Dense(32, activation='relu'),
     tf.keras.layers.Dense(8, activation='relu'),
     tf.keras.layers.Dense(1)
 ])
@@ -196,14 +198,26 @@ model = tf.keras.models.Sequential([
 model.compile(loss='mse', optimizer='adam')
 
 # Fit the model on the training data
-model.fit(X_train, y_train, epochs=50, batch_size=10)
+model.fit(X_train, y_train, epochs=50, batch_size=10, callbacks=tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3))
 
 # Evaluate the model on the testing data
 test_loss = model.evaluate(X_test, y_test)
 print('Test loss:', test_loss)
 
-print(pd.DataFrame(model.predict(X_test))) #todo append the real values
+df_test = pd.concat([pd.DataFrame(model.predict(X_test), columns=['Predicted']),
+                     pd.DataFrame(y_test, columns=['Real']),
+                     pd.DataFrame(X_test, columns=['t1_points', 't2_points', 't1_pred_win','a','b','c','d'])],
+                     axis=1)
+
+print(df_test.sample(20))
 
 
+"""
+problems with this:
+-not accurate as much as i want
+-bo3-s maybe should be removed, instead of including it in the model. or smth
+-no validation set
+-
 
+"""
 
