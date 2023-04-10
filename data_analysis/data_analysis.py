@@ -13,7 +13,7 @@ mu_values = {}
 # pro csgo games from 2016-2020
 # source: https://www.kaggle.com/datasets/gabrieltardochi/counter-strike-global-offensive-matches?resource=download
 
-df = pd.read_csv('csgo_games.csv')[['team_1', 'team_2', 'winner',
+df = pd.read_csv('csgo_games.csv')[['team_1', 'team_2', 'winner', 't1_points', 't2_points',
                                    't1_player1_kdr', 't1_player2_kdr', 't1_player3_kdr', 't1_player4_kdr', 't1_player5_kdr',
                                     't2_player1_kdr', 't2_player2_kdr', 't2_player3_kdr', 't2_player4_kdr', 't2_player5_kdr',
                                     't1_player1_dmr', 't1_player2_dmr', 't1_player3_dmr', 't1_player4_dmr', 't1_player5_dmr',
@@ -25,14 +25,14 @@ df['t1_avg_kdr'] = (df['t1_player1_kdr'] + df['t1_player2_kdr'] +
 df['t2_avg_kdr'] = (df['t2_player1_kdr'] + df['t2_player2_kdr'] +
                     df['t2_player3_kdr'] + df['t2_player4_kdr'] + df['t2_player5_kdr']) / 5
 
-df['t1_avg_dmr'] = (df['t1_player1_dmr'] + df['t1_player2_dmr'] +
+"""df['t1_avg_dmr'] = (df['t1_player1_dmr'] + df['t1_player2_dmr'] +
                     df['t1_player3_dmr'] + df['t1_player4_dmr'] + df['t1_player5_dmr']) / 5
 df['t2_avg_dmr'] = (df['t2_player1_dmr'] + df['t2_player2_dmr'] +
                     df['t2_player3_dmr'] + df['t2_player4_dmr'] + df['t2_player5_dmr']) / 5
+"""
 
 
-
-df = df[['team_1', 'team_2', 'winner', 't1_avg_kdr', 't2_avg_kdr', 't1_avg_dmr', 't2_avg_dmr']]
+df = df[['team_1', 'team_2', 'winner', 't1_points', 't2_points', 't1_avg_kdr', 't2_avg_kdr', ]]
 
 
 # remove teams from the dataset that have less than 200 matches
@@ -46,6 +46,11 @@ keep_values_2 = value_counts_2[value_counts_2 >= 100].index.tolist()
 # filter the dataframe to only include rows where the fruit value is in the keep_values list
 df = df[df['team_1'].isin(keep_values_1)]
 df = df[df['team_2'].isin(keep_values_2)]
+
+#filter out draws (not idal but draws are so rare it doesnt really matter)
+df = df[df['winner'] != 'draw']
+
+
 
 
 # prepare plot
@@ -139,55 +144,52 @@ percent_matches = num_matches / total_rows * 100
 # initial value: 58,546%
 print(
     f'After removing the first 1000 rows and ratings converge, Trueskill correctly predicts the outcome {percent_matches}% of the time.')
-"""
+
 #TODO: finish this shitty chatgpt code
 
 import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+"""
 # Load the data into a Pandas dataframe
 data = {'winner': ['team1', 'team2', 'team1', 'team1', 'team2', 'team1', 'team2', 'team2', 'team1', 'team1'],
         'win probability': [0.8, 0.6, 0.9, 0.7, 0.5, 0.6, 0.4, 0.3, 0.2, 0.7],
         'avg_kda': [3.2, 2.7, 4.1, 3.8, 2.5, 3.3, 2.9, 2.7, 3.1, 3.6]}
 df = pd.DataFrame(data)
+"""
+
+#drop unnecessary columns
+df = df[['winner', 't1_points', 't2_points', 't1_avg_kdr', 't2_avg_kdr', 't1_win_probability']]
 
 # Convert the 'winner' column to a one-hot encoded format
-df = pd.get_dummies(df, columns=['winner'])
+df= pd.get_dummies(df, columns=['winner'], dtype=np.float64)
+
+print(df.sample(10))
 
 # Split the data into input and output columns
-X = df.drop('avg_kda', axis=1).values
-y = df['avg_kda'].values
+
+
+X = df.drop(['t1_avg_kdr', 't2_avg_kdr'], axis=1).values
+y = df[['t1_avg_kdr', 't2_avg_kdr']].values
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # Create a multilayer perceptron model with ReLU activation
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(16, activation='relu', input_shape=(3,)),
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(5,)),
     tf.keras.layers.Dense(8, activation='relu'),
-    tf.keras.layers.Dense(1)
+    tf.keras.layers.Dense(2)
 ])
 
 # Compile the model with a mean squared error loss and Adam optimizer
 model.compile(loss='mse', optimizer='adam')
 
 # Fit the model on the training data
-model.fit(X_train, y_train, epochs=100, batch_size=1)
+model.fit(X_train, y_train, epochs=50, batch_size=10)
 
 # Evaluate the model on the testing data
 test_loss = model.evaluate(X_test, y_test)
 print('Test loss:', test_loss)
 
-# Predict the 'avg_kda' values for new data
-new_data = {'winner': ['team1', 'team2'],
-            'win probability': [0.6, 0.8]}
-new_df = pd.DataFrame(new_data)
-new_df = pd.get_dummies(new_df, columns=['winner'])
-new_X = new_df.values
-predictions = model.predict(new_X)
 
-# Print the predicted 'avg_kda' values
-print(predictions)
-
-"""
