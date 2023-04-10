@@ -20,6 +20,9 @@ df = pd.read_csv('csgo_games.csv')[['team_1', 'team_2', 'winner', 't1_points', '
                                     't2_player1_dmr', 't2_player2_dmr', 't2_player3_dmr', 't2_player4_dmr', 't2_player5_dmr']]
 
 
+#DANGER! the dataset includes scores in a bo3 and bo5 format as well, not just singular matches. this could fuck up things, drop scores if it does.
+#if you dont want to use scores, you can use mfkin uhh 'dmr'
+
 df['t1_avg_kdr'] = (df['t1_player1_kdr'] + df['t1_player2_kdr'] +
                     df['t1_player3_kdr'] + df['t1_player4_kdr'] + df['t1_player5_kdr']) / 5
 df['t2_avg_kdr'] = (df['t2_player1_kdr'] + df['t2_player2_kdr'] +
@@ -30,9 +33,6 @@ df['t2_avg_kdr'] = (df['t2_player1_kdr'] + df['t2_player2_kdr'] +
 df['t2_avg_dmr'] = (df['t2_player1_dmr'] + df['t2_player2_dmr'] +
                     df['t2_player3_dmr'] + df['t2_player4_dmr'] + df['t2_player5_dmr']) / 5
 """
-
-
-df = df[['team_1', 'team_2', 'winner', 't1_points', 't2_points', 't1_avg_kdr', 't2_avg_kdr', ]]
 
 
 # remove teams from the dataset that have less than 200 matches
@@ -73,9 +73,10 @@ def win_probability(team1, team2):
 
     return env.cdf(delta_mu / denom)
 
-
-
-# assign initial ratings (could be more efficient but oh well)
+is_bo3 = []
+kdr_diff = []
+# assign initial ratings 
+#very inefficient but i dont want to fix it
 for index, row in df.iterrows():
     x.append(index)
     if row['team_1'] not in ratings:
@@ -83,6 +84,15 @@ for index, row in df.iterrows():
 
     if row['team_2'] not in ratings:
         r = ratings[row['team_2']] = Rating()
+
+    if row['t1_points'] + row['t2_points'] <= 3 :
+        is_bo3.append(True)
+    else:
+        is_bo3.append(False)
+    
+    kdr_diff.append(row['t1_avg_kdr'] - row['t2_avg_kdr'])
+df['is_bo3'] = is_bo3
+df['kdr_diff'] = kdr_diff
 
 df['predicted_winner'] = 0
 df['t1_win_probability'] = 0
@@ -158,28 +168,28 @@ data = {'winner': ['team1', 'team2', 'team1', 'team1', 'team2', 'team1', 'team2'
 df = pd.DataFrame(data)
 """
 
+
 #drop unnecessary columns
-df = df[['winner', 't1_points', 't2_points', 't1_avg_kdr', 't2_avg_kdr', 't1_win_probability']]
+df = df[['winner', 't1_points', 't2_points', 't1_win_probability', 'is_bo3', 'kdr_diff']]
 
 # Convert the 'winner' column to a one-hot encoded format
-df= pd.get_dummies(df, columns=['winner'], dtype=np.float64)
+df= pd.get_dummies(df, columns=['winner', 'is_bo3'], dtype=np.float64)
 
 print(df.sample(10))
-
 # Split the data into input and output columns
 
 
-X = df.drop(['t1_avg_kdr', 't2_avg_kdr'], axis=1).values
-y = df[['t1_avg_kdr', 't2_avg_kdr']].values
+X = df.drop(['kdr_diff'], axis=1).values
+y = df[['kdr_diff']].values
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # Create a multilayer perceptron model with ReLU activation
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(16, activation='relu', input_shape=(5,)),
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(7,)),
     tf.keras.layers.Dense(8, activation='relu'),
-    tf.keras.layers.Dense(2)
+    tf.keras.layers.Dense(1)
 ])
 
 # Compile the model with a mean squared error loss and Adam optimizer
@@ -191,5 +201,9 @@ model.fit(X_train, y_train, epochs=50, batch_size=10)
 # Evaluate the model on the testing data
 test_loss = model.evaluate(X_test, y_test)
 print('Test loss:', test_loss)
+
+print(pd.DataFrame(model.predict(X_test))) #todo append the real values
+
+
 
 
