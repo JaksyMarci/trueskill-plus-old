@@ -124,7 +124,7 @@ class LikelihoodFactor(Factor):
         return 1. / (1. + self.variance * var.pi)
 
     def down(self):
-        
+        #('called Down on likelihoodfactor')
         # update value.
         msg = self.mean / self.mean[self]
         print(f'MSG={msg}\nself.mean={self.mean}\n self.value = {self.value}\n')
@@ -134,7 +134,7 @@ class LikelihoodFactor(Factor):
 
     def up(self):
         # update mean.
-      
+        #print('called Up on likelihoodfactor')
         msg = self.value / self.value[self]
         a = self.calc_a(msg)
         return self.mean.update_message(self, a * msg.pi, a * msg.tau)
