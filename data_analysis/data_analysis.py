@@ -155,25 +155,16 @@ percent_matches = num_matches / total_rows * 100
 print(
     f'After removing the first 1000 rows and ratings converge, Trueskill correctly predicts the outcome {percent_matches}% of the time.')
 
-#TODO: finish this shitty chatgpt code
 
 import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-"""
-# Load the data into a Pandas dataframe
-data = {'winner': ['team1', 'team2', 'team1', 'team1', 'team2', 'team1', 'team2', 'team2', 'team1', 'team1'],
-        'win probability': [0.8, 0.6, 0.9, 0.7, 0.5, 0.6, 0.4, 0.3, 0.2, 0.7],
-        'avg_kda': [3.2, 2.7, 4.1, 3.8, 2.5, 3.3, 2.9, 2.7, 3.1, 3.6]}
-df = pd.DataFrame(data)
-"""
-
 
 #drop unnecessary columns
 df = df[['winner', 't1_points', 't2_points', 't1_win_probability', 'is_bo3', 'kdr_diff']]
 
-# Convert the 'winner' column to a one-hot encoded format
+# Convert column to a one-hot encoded format
 df= pd.get_dummies(df, columns=['winner', 'is_bo3'], dtype=np.float64)
 
 print(df.sample(10))
