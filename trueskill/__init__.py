@@ -326,6 +326,7 @@ class TrueSkill(object):
         flatten_ratings = sum(map(tuple, rating_groups), ())
         flatten_weights = sum(map(tuple, weights), ())
         #print('flatten_ratings: ', flatten_ratings)
+        
 
         size = len(flatten_ratings)
         group_size = len(rating_groups)
@@ -347,6 +348,7 @@ class TrueSkill(object):
                 #TODO: add squad effects here
                 #print('rating_var and perf_vars: ', rating_var, perf_var)
                 yield LikelihoodFactor(rating_var, perf_var, self.beta ** 2)
+
         def build_team_perf_layer():
             for team, team_perf_var in enumerate(team_perf_vars):
                 if team > 0:
